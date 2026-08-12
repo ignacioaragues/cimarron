@@ -15552,6 +15552,9 @@ img.v129FigureAsset{
   let v133ConsecutiveErrors=0;
   let v133DuelSerial=0;
   let v133OverlayObserver=null;
+  /* v1.68: preferimos /normal/, pero toleramos temporalmente el viejo /Normal/
+     para que la misma build funcione local y online durante la transición. */
+  let v168NormalFolderVariant=0;
 
   function v133LoadAudioPrefs(){
     try{
@@ -15589,7 +15592,12 @@ img.v129FigureAsset{
 
   function v133Tracks(context=v133Context){return V133_MUSIC?.[v133MusicMode]?.[context]||[]}
   function v133CurrentCandidates(){const t=v133Tracks();return t.length?t[((v133TrackIndex%t.length)+t.length)%t.length]:[]}
-  function v133MusicPath(filename){return `assets/music/${v133MusicMode}/${filename}`}
+  function v133MusicPath(filename){
+    const dir=v133MusicMode==='normal'
+      ?(v168NormalFolderVariant===0?'normal':'Normal')
+      :'8bit';
+    return `assets/music/${dir}/${filename}`;
+  }
   function v133PrettyContext(c){return ({theme:'MENÚ',intro:'INTRO',duel:'DUELO',shop:'TRASTIENDA',event:'EVENTO',boss:'JUAN I',finalboss:'JUAN II'})[c]||'—'}
 
   function v133EnsureAudio(){
@@ -15599,6 +15607,14 @@ img.v129FigureAsset{
     v133Audio.volume=v162MusicGain(v133Volume);
     v133Audio.addEventListener('ended',()=>v133NextTrack(true));
     v133Audio.addEventListener('error',()=>{
+      /* Si /normal/ no existe (por ejemplo, una publicación vieja de GitHub
+         todavía conserva /Normal/), probamos esa variante antes de descartar
+         el archivo. */
+      if(v133MusicMode==='normal'&&v168NormalFolderVariant===0){
+        v168NormalFolderVariant=1;
+        v133LoadCurrent(true);
+        return;
+      }
       const candidates=v133CurrentCandidates();
       if(v133CandidateIndex+1<candidates.length){
         v133CandidateIndex++;
@@ -15690,6 +15706,7 @@ img.v129FigureAsset{
     if(mode!=='normal'&&mode!=='8bit')return;
     if(v133MusicMode===mode)return;
     v133MusicMode=mode;
+    if(mode==='normal')v168NormalFolderVariant=0;
     const tracks=v133Tracks();
     if(tracks.length)v133TrackIndex%=tracks.length;else v133TrackIndex=0;
     v133CandidateIndex=0;v133ConsecutiveErrors=0;
@@ -19960,5 +19977,176 @@ button[id^="jumpJuan"]{
   setV167();
   setTimeout(setV167,0);
   setTimeout(setV167,250);
+})();
+</script>
+
+<script id="v168-progressive-assets-preloader">
+(()=>{
+  /* ================= v1.68 — PRECARGA REAL DE ASSETS =================
+     No espera a que una carta/retrato aparezca para pedir su PNG.
+     Se cargan primero UI/intro, luego personajes/baraja y finalmente el resto. */
+
+  const cache=window.__CIMARRON_PRELOADED_IMAGES||(window.__CIMARRON_PRELOADED_IMAGES=[]);
+  const seen=window.__CIMARRON_PRELOADED_PATHS||(window.__CIMARRON_PRELOADED_PATHS=new Set());
+  const musicCache=window.__CIMARRON_PRELOADED_MUSIC||(window.__CIMARRON_PRELOADED_MUSIC=[]);
+
+  function unique(arr){return [...new Set(arr.filter(x=>typeof x==='string'&&x.startsWith('assets/')&&x.endsWith('.png')))]}
+
+  function loadImage(src){
+    if(!src||seen.has(src))return Promise.resolve();
+    seen.add(src);
+    return new Promise(resolve=>{
+      const im=new Image();
+      im.decoding='async';
+      im.onload=()=>resolve();
+      im.onerror=()=>resolve();
+      im.src=src;
+      cache.push(im);
+    });
+  }
+
+  async function batch(paths,concurrency=6,gap=12){
+    const q=unique(paths);
+    let cursor=0;
+    async function worker(){
+      while(cursor<q.length){
+        const src=q[cursor++];
+        await loadImage(src);
+        if(gap)await new Promise(r=>setTimeout(r,gap));
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(concurrency,q.length)},worker));
+  }
+
+  function literalPngs(){
+    const html=document.documentElement.innerHTML;
+    return unique(html.match(/assets\/[A-Za-z0-9_ÁÉÍÓÚÜÑáéíóúüñ .()\-\/]+\.png/g)||[]);
+  }
+
+  function criticalPngs(){
+    const out=[
+      'assets/ui/menu.png','assets/ui/baraja.png','assets/ui/orden.png',
+      'assets/ui/reglas.png','assets/ui/radio.png','assets/ui/mano.png',
+      'assets/ui/ficha.png','assets/ui/ficha1.png','assets/ui/sena.png',
+      'assets/ui/sena1.png','assets/ui/manga.png','assets/ui/manga1.png',
+      'assets/ui/poroto.png','assets/cards/card_back.png',
+      'assets/intro/principal.png'
+    ];
+    try{
+      if(typeof ASSETS!=='undefined'){
+        Object.values(ASSETS.ui||{}).forEach(x=>out.push(x));
+        Object.values(ASSETS.intro||{}).forEach(x=>out.push(x));
+        Object.values(ASSETS.backgrounds||{}).forEach(x=>out.push(x));
+        Object.values(ASSETS.characters||{}).forEach(x=>out.push(x));
+      }
+    }catch(e){}
+    return unique(out);
+  }
+
+  function gameplayPngs(){
+    const out=[];
+
+    /* Todos los retratos de rivales, no sólo el rival actual. */
+    try{
+      if(typeof ROSTER!=='undefined'){
+        ROSTER.forEach(r=>{
+          try{out.push(rivalPortraitPath(r.id))}catch(e){out.push(`assets/characters/${r.id}.png`)}
+        });
+      }
+      if(typeof JUAN1!=='undefined')out.push(rivalPortraitPath(JUAN1.id));
+      if(typeof JUAN2!=='undefined')out.push(rivalPortraitPath(JUAN2.id));
+    }catch(e){}
+
+    /* Baraja española completa. */
+    try{
+      if(typeof SUITS!=='undefined'&&typeof RANKS!=='undefined'){
+        for(const suit of SUITS)for(const rank of RANKS){
+          out.push(`assets/cards/spanish/${rank}_${String(suit).toLowerCase()}.png`);
+        }
+      }
+    }catch(e){}
+
+    /* Perdidos, Forasteros, Tarot, Cimarrones registrados. */
+    try{
+      if(typeof CARD_ASSET_PATHS!=='undefined')Object.values(CARD_ASSET_PATHS).forEach(x=>out.push(x));
+    }catch(e){}
+
+    return unique(out);
+  }
+
+  function collectionPngs(){
+    const out=literalPngs();
+
+    try{
+      if(typeof LAWS!=='undefined')LAWS.forEach(x=>out.push(`assets/cards/laws/${x.id}.png`));
+      if(typeof SIGNS!=='undefined')SIGNS.forEach(x=>out.push(`assets/cards/signs/${x.id}.png`));
+      if(typeof RELICS!=='undefined')RELICS.forEach(x=>out.push(`assets/relics/${x.id}.png`));
+    }catch(e){}
+
+    return unique(out);
+  }
+
+  function primeMusic(){
+    /* Calentamos las pistas que se necesitan primero. No esperamos a reproducir
+       para empezar a descargar theme / intro / primeros duelos. */
+    const files=[
+      '01 - themenormal.ogg',
+      '02 - intronormal.ogg',
+      '03 - duelonormal1.ogg',
+      '04 - duelonormal2.ogg',
+      '01 - theme8bit.ogg',
+      '02 - intro8bit.ogg',
+      '03 - duelo8bit.ogg'
+    ];
+
+    for(const file of files){
+      const is8=file.includes('8bit');
+      const dir=is8?'8bit':'normal';
+      try{
+        const a=new Audio();
+        a.preload='auto';
+        a.src=`assets/music/${dir}/${file}`;
+        a.load();
+        musicCache.push(a);
+      }catch(e){}
+    }
+  }
+
+  async function start(){
+    primeMusic();
+
+    /* Etapa 1: lo que puede aparecer en pantalla inmediatamente. */
+    await batch(criticalPngs(),8,4);
+
+    /* Etapa 2: retratos y cartas de juego, empieza enseguida. */
+    await new Promise(r=>setTimeout(r,120));
+    await batch(gameplayPngs(),7,8);
+
+    /* Etapa 3: catálogo completo en segundo plano. */
+    await new Promise(r=>setTimeout(r,250));
+    await batch(collectionPngs().filter(x=>!seen.has(x)),5,18);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',start,{once:true});
+  }else{
+    start();
+  }
+
+  /* Al primer gesto de usuario damos prioridad extra a música y assets que
+     hayan quedado pendientes por políticas de ahorro del navegador. */
+  document.addEventListener('pointerdown',()=>{
+    primeMusic();
+    batch(criticalPngs(),10,0);
+  },{capture:true,once:true});
+
+  const setV168=()=>{
+    document.title='Cimarrón v1.68 — precarga de PNG y música';
+    const sub=document.querySelector('.gameSub');
+    if(sub)sub.textContent='v1.68 · PRIMERO A 7';
+  };
+  setV168();
+  setTimeout(setV168,0);
+  setTimeout(setV168,250);
 })();
 </script>
