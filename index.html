@@ -1615,7 +1615,7 @@ function useRelic(id){
  if(id==='perro_fiel'){chooseModal(r.name,'Elegí una carta para convertir en el 1 de Bastos.',playerHand.map((c,i)=>({label:label(c),value:i})),i=>{replaceWithAncho(playerHand[i],'Bastos');markRelicUsed(id);log('El Perro Fiel cambia una carta por el 1 de Bastos.');render()});return}
  if(id==='porotos_magicos'){markRelicUsed(id);let g=gainPlayerPoints(1,r.name);log(`${r.name}: +${g} poroto${g===1?'':'s'}.`);render();checkMatch();return}
  if(id==='ultimo_pucho'){markRelicUsed(id);aiScore=Math.max(0,aiScore-2);log('El último pucho: el rival pierde 2 porotos.');render();return}
- if(id==='sargento_cruz'){markRelicUsed(id,'run');playerScore=6;log('El Sargento Cruz se pasa de tu lado. El duelo es tuyo.');render();checkMatch();return}
+ if(id==='sargento_cruz'){markRelicUsed(id,'run');playerScore=7;log('El Sargento Cruz se pasa de tu lado. El duelo es tuyo.');render();checkMatch();return}
  if(id==='bola_sin_manija'){markRelicUsed(id);[playerHand,aiHand]=[aiHand,playerHand];playerHand.forEach(c=>c.owner='P');aiHand.forEach(c=>c.owner='A');log('Bola sin Manija: intercambiás tu mano con la del rival.');render();return}
  if(id==='anillo_bolson'){markRelicUsed(id,'run');let n=aiScore;aiScore=0;gainPlayerPoints(n,r.name,false);log(`El Anillo de Don Bolsón transfiere ${n} poroto${n===1?'':'s'} del rival.`);render();checkMatch();return}
  if(id==='estatuilla_chulu'){markRelicUsed(id,'zone');matchFlags.chuluMad=true;log('Estatuilla de Chulu: el rival pierde toda lógica para el resto del duelo.');render();return}
@@ -1659,8 +1659,8 @@ function positionSideSpeech(which){
 function hideOpponentSpeech(){clearTimeout(oppSpeechTimer);let b=$('oppSpeech');if(b){b.classList.add('hidden');$('oppSpeechText').textContent=''}}
 function hidePlayerSpeech(){clearTimeout(playerSpeechTimer);let b=$('playerSpeech');if(b){b.classList.add('hidden');$('playerSpeechText').textContent=''}}
 function hideJuanSpeech(){clearTimeout(juanSpeechTimer);let b=$('juan');if(b){b.classList.add('hidden');let t=$('juanText');if(t)t.textContent='';let c=$('juanContinue');if(c)c.classList.add('hidden')}}
-function showOpponentSpeech(text){let b=$('oppSpeech');if(!b)return;clearTimeout(oppSpeechTimer);$('oppSpeechName').textContent=o()?.name||'RIVAL';const line=String(text||'').replace(/^—/,'').trim();if(!line){hideOpponentSpeech();return}positionSideSpeech('A');b.classList.remove('hidden');typewriteElement($('oppSpeechText'),line,TYPE_SPEED.speech);oppSpeechTimer=setTimeout(hideOpponentSpeech,Math.max(6500,2600+line.length*82))}
-function showPlayerSpeech(text){let b=$('playerSpeech');if(!b)return;clearTimeout(playerSpeechTimer);$('playerSpeechName').textContent=playerName();const line=String(text||'').replace(/^—/,'').trim();if(!line){hidePlayerSpeech();return}positionSideSpeech('P');b.classList.remove('hidden');typewriteElement($('playerSpeechText'),line,TYPE_SPEED.speech);playerSpeechTimer=setTimeout(hidePlayerSpeech,Math.max(5200,2200+line.length*72))}
+function showOpponentSpeech(text){let b=$('oppSpeech');if(!b)return;clearTimeout(oppSpeechTimer);$('oppSpeechName').textContent=o()?.name||'RIVAL';const line=String(text||'').replace(/^—/,'').trim();if(!line){hideOpponentSpeech();return}positionSideSpeech('A');b.classList.remove('hidden');if(typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(.58);typewriteElement($('oppSpeechText'),line,TYPE_SPEED.speech);oppSpeechTimer=setTimeout(()=>{hideOpponentSpeech();if(typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(1)},Math.max(6500,2600+line.length*82))}
+function showPlayerSpeech(text){let b=$('playerSpeech');if(!b)return;clearTimeout(playerSpeechTimer);$('playerSpeechName').textContent=playerName();const line=String(text||'').replace(/^—/,'').trim();if(!line){hidePlayerSpeech();return}positionSideSpeech('P');b.classList.remove('hidden');if(typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(.58);typewriteElement($('playerSpeechText'),line,TYPE_SPEED.speech);playerSpeechTimer=setTimeout(()=>{hidePlayerSpeech();if(typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(1)},Math.max(5200,2200+line.length*72))}
 const READ_BEAT=1350, REACTION_BEAT=900;
 let cinematicPause=false;
 function beginBeat(statusText=''){
@@ -1670,7 +1670,7 @@ function beginBeat(statusText=''){
 }
 function endBeat(){cinematicPause=false;render()}
 function afterBeat(ms,fn){setTimeout(()=>{cinematicPause=false;fn&&fn()},ms)}
-function say(s,key,force=false){if(!force&&(tutorial==='yes'||(key&&tflags[key])))return;if(key)tflags[key]=true;const line=String(s||'').trim();if(!line){hideJuanSpeech();return}mountSpeechLayers();clearTimeout(juanSpeechTimer);let b=$('juan');b.classList.remove('hidden');typewriteElement($('juanText'),line,TYPE_SPEED.dialogue,()=>{juanSpeechTimer=setTimeout(hideJuanSpeech,Math.max(7000,2800+line.length*45))})}
+function say(s,key,force=false){if(!force&&(tutorial==='yes'||(key&&tflags[key])))return;if(key)tflags[key]=true;const line=String(s||'').trim();if(!line){hideJuanSpeech();return}mountSpeechLayers();clearTimeout(juanSpeechTimer);let b=$('juan');b.classList.remove('hidden');if(typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(.52);typewriteElement($('juanText'),line,TYPE_SPEED.dialogue,()=>{juanSpeechTimer=setTimeout(()=>{hideJuanSpeech();if(typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(1)},Math.max(7000,2800+line.length*45))})}
 window.addEventListener('resize',()=>{if(!$('playerSpeech')?.classList.contains('hidden'))positionSideSpeech('P');if(!$('oppSpeech')?.classList.contains('hidden'))positionSideSpeech('A')});
 function message(title,text,cb,button='CONTINUAR'){$('modal').innerHTML=`<h2>${esc(title)}</h2><div class="modalText">${esc(text)}</div><div class="choices"><button class="btn red" id="mc" disabled>${esc(button)}</button></div>`;$('overlay').classList.remove('hidden');let el=$('modal').querySelector('.modalText'),full=el.textContent;typewriteElement(el,full,TYPE_SPEED.modal,()=>{$('mc').disabled=false});$('mc').onclick=()=>{if($('mc').disabled)return;$('overlay').classList.add('hidden');cb&&cb()}}
 function chooseModal(title,text,opts,cb){$('modal').innerHTML=`<h2>${esc(title)}</h2><div class="modalText">${esc(text||'')}</div><div class="choices">${opts.map((x,i)=>`<button class="btn" data-choice="${i}" ${x.disabled?'disabled':''}>${esc(x.label)}</button>`).join('')}</div>`;$('overlay').classList.remove('hidden');typewriteBySelector($('modal'),'.modalText',TYPE_SPEED.modal);document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{let x=opts[+b.dataset.choice];if(x.disabled)return;$('overlay').classList.add('hidden');cb(x.value)})}
@@ -1710,9 +1710,7 @@ function intro(){
  }
  if(introNode==='cimarron'){
    let txt=tutorial==='yes'
-     ?`JUAN
-
-—Bien. Acá jugamos a lo mismo, pero con otras reglas. Reglas viejas. Le decimos Cimarrón.
+     ?`—Bien. Acá jugamos a lo mismo, pero con otras reglas. Reglas viejas. Le decimos Cimarrón.
 
 Juan mira hacia el mostrador.
 
@@ -1723,9 +1721,7 @@ Un muchacho que estaba apoyado cerca de la barra se acerca a la mesa.
 —Empezá con él.
 
 El Novato toma asiento frente a vos.`
-     :`JUAN
-
-—Entonces te voy avisando. Acá jugamos a lo mismo, pero con otras reglas. Reglas viejas. Le decimos Cimarrón.
+     :`—Entonces te voy avisando. Acá jugamos a lo mismo, pero con otras reglas. Reglas viejas. Le decimos Cimarrón.
 
 Juan mira hacia el mostrador.
 
@@ -1736,12 +1732,12 @@ Un muchacho que estaba apoyado cerca de la barra se acerca a la mesa.
 —Empezá con él.
 
 El Novato toma asiento frente a vos.`;
-   b.innerHTML=`<div class="title" style="font-size:56px">CIMARRÓN</div>${introImageHTML('cimarron','JUAN')}<div class="story">${esc(txt)}</div><div class="choices"><button class="btn red" id="enter">JUGAR</button></div>`;
+   b.innerHTML=`${introImageHTML('cimarron')}<div class="story">${esc(txt)}</div><div class="choices"><button class="btn red" id="enter">JUGAR</button></div>`;
    $('enter').onclick=startGame; typewriteBySelector(b,'.story',TYPE_SPEED.story); attachSkipIntro(b); return;
  }
  let node=STORY[introNode]; if(!node){introNode='rain';return intro()}
  if(node.tutorialChoice){
-   b.innerHTML=`${introImageHTML('truco_question','JUAN')}<div class="story"><b>JUAN</b>\n\n${esc(node.text)}</div><div class="choices"><button class="btn" data-t="yes">SÍ</button><button class="btn" data-t="maybe">MÁS O MENOS</button><button class="btn red" data-t="no">NO</button></div>`;
+   b.innerHTML=`${introImageHTML('truco_question')}<div class="story">${esc(node.text)}</div><div class="choices"><button class="btn" data-t="yes">SÍ</button><button class="btn" data-t="maybe">MÁS O MENOS</button><button class="btn red" data-t="no">NO</button></div>`;
    b.querySelectorAll('[data-t]').forEach(x=>x.onclick=()=>{tutorial=x.dataset.t;introNode='cimarron';intro()}); typewriteBySelector(b,'.story',TYPE_SPEED.story); attachSkipIntro(b); return;
  }
  b.innerHTML=`${introImageHTML(introNode)}<div class="story">${esc(node.text)}</div><div class="choices">${node.choices.map((c,i)=>`<button class="btn ${i===0?'':'red'}" data-story="${i}">${esc(c[0])}</button>`).join('')}</div>`;
@@ -2010,7 +2006,7 @@ function finishHand(w,p){
  },READ_BEAT+REACTION_BEAT);
 }
 function removeFromRun(uid){runDeck=runDeck.filter(x=>x.uid!==uid)} function addFichas(n){if(hasLaw('yapa_fichas')&&n>0)n++;fichas+=n;render()}
-function checkMatch(){if(aiScore>=6&&playerScore<6&&hasRelic('medallita_milagrosa')&&!relicUsed('medallita_milagrosa','run')){markRelicUsed('medallita_milagrosa','run');aiScore=5;handOver=true;render();message('MEDALLITA MILAGROSA','La medallita se calienta contra el pecho. La derrota no termina la run. El rival vuelve a 5 porotos.',()=>{handOver=false;newHand()});return true}if(playerScore<6&&aiScore<6)return false;handOver=true;render();let won=playerScore>=6,title=won?`${o().name} PERDIÓ EL DUELO`:'PERDISTE EL DUELO',text=won?`${o().name} baja las cartas.\n\nMarcador final: ${playerScore}–${aiScore}.\n\nLa mesa queda en silencio un instante.`:`${o().name} llega a 6 porotos.\n\nMarcador final: ${playerScore}–${aiScore}.\n\nJuan espera antes de volver a hablar.`;message(title,text,()=>won?defeated():lostMatch(),'CONTINUAR');return true}
+function checkMatch(){if(aiScore>=7&&playerScore<7&&hasRelic('medallita_milagrosa')&&!relicUsed('medallita_milagrosa','run')){markRelicUsed('medallita_milagrosa','run');aiScore=6;handOver=true;render();message('MEDALLITA MILAGROSA','La medallita se calienta contra el pecho. La derrota no termina la run. El rival vuelve a 6 porotos.',()=>{handOver=false;newHand()});return true}if(playerScore<7&&aiScore<7)return false;handOver=true;render();let won=playerScore>=7,title=won?`${o().name} PERDIÓ EL DUELO`:'PERDISTE EL DUELO',text=won?`${o().name} baja las cartas.\n\nMarcador final: ${playerScore}–${aiScore}.\n\nLa mesa queda en silencio un instante.`:`${o().name} llega a 7 porotos.\n\nMarcador final: ${playerScore}–${aiScore}.\n\nJuan espera antes de volver a hablar.`;message(title,text,()=>won?defeated():lostMatch(),'CONTINUAR');return true}
 
 
 const CARD_DROP_RIVALS=new Set(['burrero','quinielero','rematador','forastero','astrologo','sonambula']);
@@ -2150,7 +2146,7 @@ Mira una puerta al fondo que antes no estaba.
 Juan sonríe.
 
 —Ya lo vas a saber.`,()=>{oppI++;nextRival()});if(o().id==='juan2')return epilogue();if(o().id==='novato'&&runNumber===0)return noviceTripleReward(afterReward);duelSleeveDrop(()=>rewardScreen(afterReward))}
-function lostMatch(){speak('win',1);deaths++;relicState.carlitosWins=0;relicState.pinochoLies=0;if(o().id==='juan2')return message('PERDISTE EL ALMA',`Juan llega a 6 porotos.
+function lostMatch(){speak('win',1);deaths++;relicState.carlitosWins=0;relicState.pinochoLies=0;if(o().id==='juan2')return message('PERDISTE EL ALMA',`Juan llega a 7 porotos.
 
 No festeja. Estira la mano sobre la mesa.
 
@@ -2172,7 +2168,7 @@ Cuando volvés a entrar a la pulpería, Juan está en la misma silla.
 
 —Jugando para recuperarla.
 
-Ya hay alguien esperando.`,()=>finishRunRelicSequence(()=>restartRun(true)),'EMPEZAR DE NUEVO'));message('PERDISTE',`${o().name} llegó a 6 porotos primero.
+Ya hay alguien esperando.`,()=>finishRunRelicSequence(()=>restartRun(true)),'EMPEZAR DE NUEVO'));message('PERDISTE',`${o().name} llegó a 7 porotos primero.
 
 La mesa se borra.
 
@@ -2186,13 +2182,11 @@ La lluvia sigue golpeando las ventanas.`,()=>{let text=deaths===1?`Volvés al pr
 
 —Acá se empieza de nuevo.
 
-Baraja, Leyes, Señas, Fichas y Manga vuelven al comienzo.
-
-Por ahora, el primero vuelve a ser el Novato.`:`Otra vez la misma puerta. La misma lluvia. Alguien ya está esperando.`;message('AFUERA LLUEVE',text,()=>finishRunRelicSequence(()=>restartRun(true)))})}
+Baraja, Leyes, Señas, Fichas y Manga vuelven al comienzo.`:`Otra vez la misma puerta. La misma lluvia. Alguien ya está esperando.`;message('AFUERA LLUEVE',text,()=>finishRunRelicSequence(()=>restartRun(true)))})}
 function restartRun(newNight=true){if(newNight)runNumber++;runDeck=mkBaseDeck();playerSleeve=[];playerRules=[];fichas=hasRelic('san_cayetano')?2:0;senas=[];lastHandWinner=null;freeSleeveGiftCount=0;eligibleHandsSinceGift=0;signFx={};relicState.runUsed={};relicState.duelUsed={};relicState.handUsed={};relicState.zoneUsed={};relicState.rewardLuck=0;relicState.forceRewardBoost=0;relicState.carlitosDue=false;relicState.carlitosWins=0;relicState.pinochoLies=0;if(hasRelic('espuela_leguisamo')){for(let i=0;i<2;i++){let s=pick(SUITS);runDeck.push({uid:uidN++,id:`relic_caballo_${uidN}`,rank:11,suit:s,kind:'base',cat:'Clásico',name:`11 de ${s}`})}}if(relicState.zahirCarry){let c={...relicState.zahirCarry,uid:uidN++,fromSleeve:true};playerSleeve.push(c);relicState.zahirCarry=null;log('Zahir: una carta de la run anterior aparece Bajo la Manga.')}route=generateRoute();oppI=0;playerScore=aiScore=0;mano='P';renderRelics();startMatch()}
 function startGame(){loadRelics();mountSpeechLayers();$('intro').classList.add('hidden');$('gameScreen').classList.remove('hidden');let t=$('mainTable');if(t)t.style.backgroundImage=`linear-gradient(#120b0640,#120b0620),url("${ASSETS.backgrounds.mesa}")`;restartRun(false)}
 function trucoTutorial(done){if(oppI!==0||tflags.trucoCompleto||tutorial==='yes'){done();return}tflags.trucoCompleto=true;let pages=tutorial==='maybe'?[['LOS CANTOS',`—Además del Truco, acá jugamos Retruco y Vale Cuatro: la mano puede subir a 3 y a 4 porotos.\n\n—Y además del Envido está el Real Envido, que vale 3. Acá no usamos Falta Envido.\n\n—Una vez resuelta la primera baza, ya no podés cantar Envido.`],['UNA COSA MÁS',`—Si te cantan Truco antes de que haya Envido, podés contestar Envido o Real Envido primero.\n\n—Se resuelve eso y después el Truco puede volver a cantarse.`]]:[['TRUCO',`—El Truco lleva la mano a 2 porotos. Si lo quieren, el que respondió puede subir a Retruco: 3.\n\n—Y quien recibe el Retruco puede subir otra vez: Vale Cuatro. Cuatro porotos. Hasta ahí.`],['ENVIDO',`—El Envido vale 2 porotos. El Real Envido, cantado solo, vale 3.\n\n—Si a un Envido le responden Real Envido, quedan 5 en juego. Acá no usamos Falta Envido.\n\n—Y acordate: una vez resuelta la primera baza, el Envido ya no se puede cantar.`],['EL ORDEN',`—Acordate de ésta porque se olvida seguido. Si alguien canta Truco y todavía no hubo Envido, el otro puede responder Envido —o Real Envido— antes de contestar el Truco.\n\n—Se quiera o no ese Envido, después el Truco se puede cantar otra vez.`]];let i=0;const go=()=>{if(i>=pages.length){done();return}let [t,x]=pages[i++];message('JUAN · '+t,x,go,i<pages.length?'SEGUIR':'JUGAR')};go()}
-function startMatch(){relicState.duelUsed={};relicState.handUsed={};playerScore=hasRelic('nina_bonita_rel')?1:0;if(allWinds())playerScore+=2;aiScore=0;mano='P';handNo=0;lastPlayed={P:null,A:null};matchRemoved=new Set();matchExtras=[];matchFlags={playerWinStreak:0,aiWinStreak:0,usedForbiddenRelic:false,herraduraReady:false,rivalNextDebuff:false,chuluMad:false,rivalFichas:Math.max(1,(o().power||1)+(o().mng||0)-1)};pot=0;pucheroPot=0;if(hasRelic('poncho_tehuelche')&&fichas<=0){fichas+=3;matchFlags.ponchoTehuelche=true}if(hasLaw('baraja_corta')){let candidates=shuffle([...runDeck]).slice(0,4);candidates.forEach(c=>matchRemoved.add(c.uid))}if(hasLaw('baraja_larga'))matchExtras=shuffle(runDeck.map(cloneCard)).slice(0,4).map(c=>({...c,uid:uidN++}));if(hasLaw('vaquita')&&fichas>0){fichas--;matchFlags.vaquitaPaid=true}prepareAIGear();$('log').innerHTML='';log(`Se sienta ${o().name}. Primero a 6 porotos.`);if(matchFlags.ponchoTehuelche)log('Poncho tehuelche: +3 Fichas al comienzo del duelo.');revealRelicCharacteristic();newHand(true)}
+function startMatch(){relicState.duelUsed={};relicState.handUsed={};playerScore=hasRelic('nina_bonita_rel')?1:0;if(allWinds())playerScore+=2;aiScore=0;mano='P';handNo=0;lastPlayed={P:null,A:null};matchRemoved=new Set();matchExtras=[];matchFlags={playerWinStreak:0,aiWinStreak:0,usedForbiddenRelic:false,herraduraReady:false,rivalNextDebuff:false,chuluMad:false,rivalFichas:Math.max(1,(o().power||1)+(o().mng||0)-1)};pot=0;pucheroPot=0;if(hasRelic('poncho_tehuelche')&&fichas<=0){fichas+=3;matchFlags.ponchoTehuelche=true}if(hasLaw('baraja_corta')){let candidates=shuffle([...runDeck]).slice(0,4);candidates.forEach(c=>matchRemoved.add(c.uid))}if(hasLaw('baraja_larga'))matchExtras=shuffle(runDeck.map(cloneCard)).slice(0,4).map(c=>({...c,uid:uidN++}));if(hasLaw('vaquita')&&fichas>0){fichas--;matchFlags.vaquitaPaid=true}prepareAIGear();$('log').innerHTML='';log(`Se sienta ${o().name}. Primero a 7 porotos.`);if(matchFlags.ponchoTehuelche)log('Poncho tehuelche: +3 Fichas al comienzo del duelo.');revealRelicCharacteristic();newHand(true)}
 function pibe(){return portrait==='M'?'piba':'pibe'}
 function playerName(){return portrait==='M'?'LA PIBA':'EL PIBE'}
 function playerNameTitle(){return portrait==='M'?'La Piba':'El Pibe'}
@@ -2257,11 +2251,11 @@ Desde esta mesa, los rivales también reciben Naipes Bajo la Manga y Señas al a
 
 ${rv.trait}
 
-Poder ${rv.power}. Primero a 6 porotos.`,startMatch),'SEGUIR');message('OTRO SE SIENTA',`${rv.name} ocupa la silla.
+Poder ${rv.power}. Primero a 7 porotos.`,startMatch),'SEGUIR');message('OTRO SE SIENTA',`${rv.name} ocupa la silla.
 
 ${rv.trait}
 
-Poder ${rv.power}. Primero a 6 porotos.`,startMatch)}
+Poder ${rv.power}. Primero a 7 porotos.`,startMatch)}
 function drawUnique(power,phase,used){let pool=ROSTER.filter(x=>x.power===power&&!used.has(x.id));if(!pool.length)pool=ROSTER.filter(x=>Math.abs(x.power-power)<=1&&!used.has(x.id));if(!pool.length)pool=ROSTER.filter(x=>!used.has(x.id));let x=pick(pool);if(x)used.add(x.id);return x}
 function generateRoute(){let used=new Set(),r=[];const p1=ROSTER.filter(x=>x.power===1);let opener=runNumber===0?ROSTER.find(x=>x.id==='novato'):pick(p1);if(opener){r.push(opener);used.add(opener.id)}const firstCurve=runNumber<2?[2,2,3,3,3,4,4,4]:[2,3,3,3,4,4,4,5];firstCurve.forEach(p=>r.push(drawUnique(p,'any',used)));r.push(JUAN1);const secondCurve=runNumber<2?[4,4,4,5,5,5,6,6,6]:[4,4,5,5,5,6,6,6,6];secondCurve.forEach(p=>r.push(drawUnique(p,'any',used)));r.push(JUAN2);if(hasRelic('jardin_senderos')){let mortals=r.filter(x=>!['juan1','juan2'].includes(x.id));shuffle(mortals);r=[...mortals.slice(0,9),JUAN1,...mortals.slice(9,18),JUAN2];}return r}
 
@@ -2670,12 +2664,12 @@ finishHand=function(w,p){
  },READ_BEAT+REACTION_BEAT);
 };
 
-// Si llegaste a seis, a veces el rival apuesta una Reliquia a una mano más.
+// Si llegaste a siete, a veces el rival apuesta una Reliquia a una mano más.
 function v48RelicWagerPool(){return RELICS.filter(r=>r.implemented==='yes'&&!equippedRelics.includes(r.id)&&(r.id!=='rodocrosita'||window.v111ChangeUnlocked?.('color')))}
 function v48FinishMatchMessage(won){
   handOver=true;render();
   let title=won?`${o().name} PERDIÓ EL DUELO`:'PERDISTE EL DUELO';
-  let text=won?`${o().name} baja las cartas.\n\nMarcador final: ${playerScore}–${aiScore}.\n\nLa mesa queda en silencio un instante.`:`${o().name} llega a 6 porotos.\n\nMarcador final: ${playerScore}–${aiScore}.\n\nJuan espera antes de volver a hablar.`;
+  let text=won?`${o().name} baja las cartas.\n\nMarcador final: ${playerScore}–${aiScore}.\n\nLa mesa queda en silencio un instante.`:`${o().name} llega a 7 porotos.\n\nMarcador final: ${playerScore}–${aiScore}.\n\nJuan espera antes de volver a hablar.`;
   message(title,text,()=>{
     if(won&&matchFlags.relicWager){
       const id=matchFlags.relicWager;matchFlags.relicWager=null;
@@ -2684,13 +2678,13 @@ function v48FinishMatchMessage(won){
   },'CONTINUAR');
 }
 checkMatch=function(){
-  if(aiScore>=6&&playerScore<6&&hasRelic('medallita_milagrosa')&&!relicUsed('medallita_milagrosa','run')){
-    markRelicUsed('medallita_milagrosa','run');aiScore=5;handOver=true;render();
-    message('MEDALLITA MILAGROSA','La medallita se calienta contra el pecho. La derrota no termina la run. El rival vuelve a 5 porotos.',()=>{handOver=false;newHand()});
+  if(aiScore>=7&&playerScore<7&&hasRelic('medallita_milagrosa')&&!relicUsed('medallita_milagrosa','run')){
+    markRelicUsed('medallita_milagrosa','run');aiScore=6;handOver=true;render();
+    message('MEDALLITA MILAGROSA','La medallita se calienta contra el pecho. La derrota no termina la run. El rival vuelve a 6 porotos.',()=>{handOver=false;newHand()});
     return true;
   }
-  if(playerScore<6&&aiScore<6)return false;
-  const won=playerScore>=6;
+  if(playerScore<7&&aiScore<7)return false;
+  const won=playerScore>=7;
   if(won&&v48RelicsUnlocked()&&!matchFlags.relicWagerOffered&&!matchFlags.relicWager&&!['juan1','juan2'].includes(o().id)){
     matchFlags.relicWagerOffered=true;
     let pool=v48RelicWagerPool();
@@ -2698,13 +2692,13 @@ checkMatch=function(){
       let r=pick(pool);handOver=true;render();showOpponentSpeech('Una más. Por esto.');
       $('modal').innerHTML=`<h2>UNA RONDA MÁS</h2><div class="modalText">${esc(o().name)} no se levanta.
 
-—Seis, sí. Pero te propongo una más.
+—Siete, sí. Pero te propongo una más.
 
 Deja una Reliquia sobre la mesa: ${esc(r.name)}.
 
-Si aceptás, volvés a 5 porotos y el duelo sigue. Si volvés a llegar a seis, la Reliquia es tuya.</div><div class="relicOfferGrid"><div class="relicOffer"><img class="relicOfferSprite" src="${relicAsset(r.id)}" alt="" onerror="this.style.visibility='hidden'"><h4>${esc(r.name)}</h4><p>${esc(r.text)}</p></div></div><div class="choices"><button class="btn" id="takeWager">ACEPTAR · VOLVER A 5</button><button class="btn red" id="declineWager">NO. GANÉ.</button></div>`;
+Si aceptás, volvés a 6 porotos y el duelo sigue. Si volvés a llegar a siete, la Reliquia es tuya.</div><div class="relicOfferGrid"><div class="relicOffer"><img class="relicOfferSprite" src="${relicAsset(r.id)}" alt="" onerror="this.style.visibility='hidden'"><h4>${esc(r.name)}</h4><p>${esc(r.text)}</p></div></div><div class="choices"><button class="btn" id="takeWager">ACEPTAR · VOLVER A 6</button><button class="btn red" id="declineWager">NO. GANÉ.</button></div>`;
       $('overlay').classList.remove('hidden');
-      $('takeWager').onclick=()=>{$('overlay').classList.add('hidden');playerScore=5;matchFlags.relicWager=r.id;cinematicPause=false;tutorialLock=false;pending=null;handOver=false;hideJuanSpeech();hideOpponentSpeech();hidePlayerSpeech();mano=mano==='P'?'A':'P';render();setTimeout(()=>newHand(false),120)};
+      $('takeWager').onclick=()=>{$('overlay').classList.add('hidden');playerScore=6;matchFlags.relicWager=r.id;cinematicPause=false;tutorialLock=false;pending=null;handOver=false;hideJuanSpeech();hideOpponentSpeech();hidePlayerSpeech();mano=mano==='P'?'A':'P';render();setTimeout(()=>newHand(false),120)};
       $('declineWager').onclick=()=>{$('overlay').classList.add('hidden');v48FinishMatchMessage(true)};
       return true;
     }
@@ -11573,16 +11567,14 @@ ${x.q}`,img,`<div class="choices">${opts.map((o,i)=>`<button class="btn" data-v8
   };
   let v107LessonBusy=false;
   function v107VisibleLessonKeys(){
-    // Juan sólo puede comentar información que el jugador realmente conoce.
-    // Sus propias cartas/Manga siempre son visibles; del rival entran únicamente
-    // cartas ya jugadas boca arriba o reveladas explícitamente por una Seña.
-    const rivalVisible=(typeof window.v120VisibleRivalCards==='function'?window.v120VisibleRivalCards():[]);
-    const cards=[...(playerHand||[]),...(playerSleeve||[]),...rivalVisible].filter(Boolean);
+    // v1.66: Juan sólo explica lo que el jugador está viendo AHORA MISMO
+    // entre sus cartas repartidas. No mira Manga ni cartas del rival.
+    const cards=[...(playerHand||[])].filter(Boolean);
     const keys=[];
     if(cards.some(v107ChangeCount))keys.push('changes');
     const cats=cards.map(c=>def(c)?.cat||c.cat);
     if(cats.includes('Tarot'))keys.push('tarot');
-    // Los Cimarrones ya no disparan tutorial de Juan: se aprenden por su propia descripción.
+    // Los Cimarrones se aprenden por su propia descripción.
     if(cats.includes('Forasteros'))keys.push('forastero');
     if(cats.includes('Perdidos'))keys.push('perdido');
     return keys.filter(k=>!tflags[V107_LESSONS[k].flag]);
@@ -15528,7 +15520,6 @@ img.v129FigureAsset{
       duel:[
         ['03 - duelo8bit.ogg','duelo8bit.ogg'],
         ['04 - duelo8bit2.ogg','duelo8bit2.ogg'],
-        ['05 - duelo8bit.ogg','duelo8bit.ogg'],
         ['10 - duelo8bit.ogg','duelo8bit.ogg']
       ],
       boss:[['06 - boss8bit.ogg','boss8bit.ogg'],['07 - boss8bit2.ogg','boss8bit2.ogg']],
@@ -15575,6 +15566,27 @@ img.v129FigureAsset{
   }
   v133LoadAudioPrefs();
 
+  /* v1.62: la música queda deliberadamente muy por debajo de los SFX.
+     El porcentaje de UI sigue siendo 0–100, pero la ganancia real usa
+     una curva no lineal. 20% ≈ 2.5% real; 100% ≈ 38% real. */
+  let v163MusicDuck=1;
+
+  function v162MusicGain(x){
+    x=Math.max(0,Math.min(1,Number(x)||0));
+    return Math.min(.22,.22*Math.pow(x,1.7))*v163MusicDuck;
+  }
+
+  function v163RefreshMusicVolume(){
+    try{
+      if(v133Audio)v133Audio.volume=v162MusicGain(v133Volume);
+    }catch(e){}
+  }
+
+  window.CIMARRON_SET_MUSIC_DUCK=function(mult){
+    v163MusicDuck=Math.max(.35,Math.min(1,Number(mult)||1));
+    v163RefreshMusicVolume();
+  };
+
   function v133Tracks(context=v133Context){return V133_MUSIC?.[v133MusicMode]?.[context]||[]}
   function v133CurrentCandidates(){const t=v133Tracks();return t.length?t[((v133TrackIndex%t.length)+t.length)%t.length]:[]}
   function v133MusicPath(filename){return `assets/music/${v133MusicMode}/${filename}`}
@@ -15584,7 +15596,7 @@ img.v129FigureAsset{
     if(v133Audio)return v133Audio;
     v133Audio=new Audio();
     v133Audio.preload='auto';
-    v133Audio.volume=v133Volume;
+    v133Audio.volume=v162MusicGain(v133Volume);
     v133Audio.addEventListener('ended',()=>v133NextTrack(true));
     v133Audio.addEventListener('error',()=>{
       const candidates=v133CurrentCandidates();
@@ -15609,7 +15621,7 @@ img.v129FigureAsset{
 
   function v133TryPlay(){
     const a=v133EnsureAudio();
-    a.volume=v133Volume;
+    a.volume=v162MusicGain(v133Volume);
     if(!v133MusicEnabled)return;
     const p=a.play();
     if(p&&typeof p.catch==='function')p.catch(()=>{});
@@ -15691,7 +15703,7 @@ img.v129FigureAsset{
   }
   function v133SetVolume(x){
     v133Volume=Math.max(0,Math.min(1,Number(x)||0));
-    if(v133Audio)v133Audio.volume=v133Volume;
+    if(v133Audio)v133Audio.volume=v162MusicGain(v133Volume);
     v133SaveAudioPrefs();v133UpdateAudioUI();
   }
 
@@ -18398,7 +18410,7 @@ img.v129FigureAsset{
       v147BeanVisual[side]=shown;
       v147BeanScore(side,shown);
       v147PopLatestBean(side);
-      v147OneShot('poroto',.48);
+      v147OneShot('poroto',.62);
       setTimeout(step,230);
     };
     setTimeout(step,110);
@@ -18482,7 +18494,7 @@ img.v129FigureAsset{
 
     /* deal.wav representa el reparto completo: suena UNA sola vez.
        Las cartas siguen entrando visualmente de a una y alternadas. */
-    v147OneShot('deal',.46);
+    v147OneShot('deal',.60);
 
     order.forEach(([side,i],idx)=>{
       setTimeout(()=>{
@@ -18535,7 +18547,7 @@ img.v129FigureAsset{
       setTimeout(()=>table.classList.remove('v147ShufflePulse'),420);
     }
 
-    const mix=v147OneShot('mezcla',.48);
+    const mix=v147OneShot('mezcla',.62);
     if(!mix)return beginDeal();
 
     let started=false;
@@ -18557,7 +18569,7 @@ img.v129FigureAsset{
   if(typeof redealBothRelic==='function'){
     const v147RedealBase=redealBothRelic;
     redealBothRelic=function(name){
-      v147OneShot('mezcla',.48);
+      v147OneShot('mezcla',.62);
       return v147RedealBase(name);
     };
   }
@@ -18575,10 +18587,6 @@ img.v129FigureAsset{
 
     if(node!==v147LastIntroSoundNode){
       v147LastIntroSoundNode=node;
-      if(node==='rain')v147RainBurst(2100,4300,true);
-      if(node==='get_off')v147RainBurst(350,4200,true);
-      if(node==='worse')v147RainBurst(450,3300,Math.random()<.7);
-      if(node==='pulperia')v147StartPulperia();
     }
     return r;
   };
@@ -18645,10 +18653,10 @@ img.v129FigureAsset{
     if(!el)return null;
 
     if(el.id==='juanText'){
-      return {base:155,spread:24,wave:'square',volume:.055,duration:.050};
+      return {base:155,spread:24,wave:'square',volume:.120,duration:.050};
     }
     if(el.id==='playerSpeechText'){
-      return {base:225,spread:34,wave:'triangle',volume:.048,duration:.043};
+      return {base:225,spread:34,wave:'triangle',volume:.110,duration:.043};
     }
     if(el.id==='oppSpeechText'){
       const rid=(typeof o==='function'&&o()?.id)||'rival';
@@ -18659,7 +18667,7 @@ img.v129FigureAsset{
         base:bases[h%bases.length],
         spread:24+(h%22),
         wave:waves[(h>>>4)%waves.length],
-        volume:.042,
+        volume:.095,
         duration:.040+(h%12)/1000
       };
     }
@@ -19099,13 +19107,16 @@ img[src*="assets/cards/cimarrones/"],
 
     const r=v155EnvidoResult;
     const rival=o()?.name||'Rival';
-    const winner=r.winner==='P'?'Vos':rival;
-    const manoNote=(r.pv===r.av)?` Empate: gana ${winner} por ser mano.`:'';
+    const playerWon=r.winner==='P';
+    const resultLine=playerWon?'Vos ganás el Envido.':`${rival} gana el Envido.`;
+    const manoNote=(r.pv===r.av)
+      ?(playerWon?' Empate: ganás vos por ser mano.':` Empate: gana ${rival} por ser mano.`)
+      :'';
 
     $('callText').textContent=
       `En juego: ${r.stake} poroto${r.stake===1?'':'s'}. `+
       `Vos: ${r.pv} · ${rival}: ${r.av}. `+
-      `${winner} gana el Envido.${manoNote}`;
+      resultLine+manoNote;
 
     return true;
   }
@@ -19151,13 +19162,24 @@ img[src*="assets/cards/cimarrones/"],
       const box=$('call');
       if(box)box.classList.remove('v155EnvidoResult');
       try{updateCallUI()}catch(e){}
-    },6500);
+    },4200);
 
     /* Si algún render intermedio ocurrió antes de guardar el timeout,
        aseguramos que el resumen quede visible. */
     setTimeout(v155ShowEnvidoResult,0);
     return r;
   };
+
+  /* El resultado también puede cerrarse inmediatamente con un clic. */
+  const v155CallBox=$('call');
+  if(v155CallBox){
+    v155CallBox.addEventListener('click',e=>{
+      if(!v155CallBox.classList.contains('v155EnvidoResult'))return;
+      e.preventDefault();
+      e.stopPropagation();
+      v155ClearEnvidoResult();
+    });
+  }
 
   /* Cualquier nuevo canto reemplaza naturalmente al resumen anterior. */
   const v155ShowAICallBase=showAICall;
@@ -19480,5 +19502,463 @@ button[id^="jumpJuan"]{
   setVersion();
   setTimeout(setVersion,0);
   setTimeout(setVersion,200);
+})();
+</script>
+
+<script id="v161-persistent-intro-ambience">
+(()=>{
+  /* ================= v1.61 — AMBIENTES PERSISTENTES DE INTRO =================
+     LLUVIA:
+       desde "Llueve desde la tarde" hasta entrar efectivamente a la pulpería.
+       No se reinicia al cambiar de escena.
+
+     PULPERÍA:
+       empieza exactamente en "Está llena" (node inside) y sigue fuerte durante
+       crowd / preguntas / encuentro con Juan / "¿Sabés jugar al truco?".
+       Se corta al entrar a la pantalla donde Juan empieza a explicar Cimarrón.
+  */
+
+  const RAIN_NODES=new Set([
+    'rain','south','bus','ask_driver','look_window','no_continue',
+    'get_off','package','label','deadline','directions','walk_unsure',
+    'walk','bridge1','bridge2','bridge2b','lost','turn_back','worse',
+    'light','pulperia','eaves'
+  ]);
+
+  const PULPERIA_NODES=new Set([
+    'inside','crowd','ask_room','ask_bar','juan_calls','ignore_juan',
+    'chair','hurry','quinta','juan_name','truco_question'
+  ]);
+
+  let v161Rain=null;
+  let v161Pulperia=null;
+  let v161ThunderTimer=null;
+
+  function master(){return Math.max(0,Math.min(1,window.CIMARRON_SFX_VOLUME??1))}
+  function enabled(){return window.CIMARRON_SFX_ENABLED!==false}
+
+  function makeLoop(src,baseVolume){
+    if(!enabled())return null;
+    try{
+      const a=new Audio(src);
+      a.preload='auto';
+      a.loop=true;
+      a._v161Base=baseVolume;
+      a.volume=Math.min(1,baseVolume*master());
+      const p=a.play();
+      if(p&&typeof p.catch==='function')p.catch(()=>{});
+      return a;
+    }catch(e){return null}
+  }
+
+  function stopAudio(a){
+    if(!a)return;
+    try{a.pause();a.currentTime=0}catch(e){}
+  }
+
+  function syncVolumes(){
+    if(v161Rain)v161Rain.volume=Math.min(1,(v161Rain._v161Base||.72)*master());
+    if(v161Pulperia)v161Pulperia.volume=Math.min(1,(v161Pulperia._v161Base||.98)*master());
+  }
+
+  function scheduleThunder(){
+    clearTimeout(v161ThunderTimer);
+    if(!v161Rain||!enabled())return;
+    const delay=7000+Math.random()*7000;
+    v161ThunderTimer=setTimeout(()=>{
+      if(v161Rain&&enabled()){
+        try{
+          const t=new Audio('assets/audio/trueno.wav');
+          t.preload='auto';
+          t.volume=.32*master();
+          const p=t.play();
+          if(p&&typeof p.catch==='function')p.catch(()=>{});
+        }catch(e){}
+        scheduleThunder();
+      }
+    },delay);
+  }
+
+  function startRain(){
+    if(v161Rain||!enabled())return;
+    /* Fuerte y persistente: no hay fade-out entre pantallas. */
+    v161Rain=makeLoop('assets/audio/lluvia.wav',.72);
+    if(typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(.72);
+    if(v161Rain)scheduleThunder();
+  }
+
+  function stopRain(){
+    clearTimeout(v161ThunderTimer);
+    v161ThunderTimer=null;
+    stopAudio(v161Rain);
+    v161Rain=null;
+    if(!v161Pulperia&&typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(1);
+  }
+
+  function startPulperia(){
+    if(v161Pulperia||!enabled())return;
+    /* Arranca fuerte de inmediato al aparecer "Está llena." */
+    v161Pulperia=makeLoop('assets/audio/pulperia.wav',.98);
+    if(typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(.62);
+  }
+
+  function stopPulperia(){
+    stopAudio(v161Pulperia);
+    v161Pulperia=null;
+    if(!v161Rain&&typeof window.CIMARRON_SET_MUSIC_DUCK==='function')window.CIMARRON_SET_MUSIC_DUCK(1);
+  }
+
+  function syncForNode(node){
+    if(!enabled()){
+      stopRain();
+      stopPulperia();
+      return;
+    }
+
+    if(RAIN_NODES.has(node)){
+      startRain();
+      stopPulperia();
+      return;
+    }
+
+    if(PULPERIA_NODES.has(node)){
+      stopRain();
+      startPulperia();
+      return;
+    }
+
+    /* cimarron = Juan ya empieza la explicación; ahí se apaga la pulpería. */
+    stopRain();
+    stopPulperia();
+  }
+
+  const v161IntroBase=intro;
+  intro=function(){
+    const node=introNode;
+    const r=v161IntroBase();
+    syncForNode(node);
+    return r;
+  };
+
+  const v161StartBase=startGame;
+  startGame=function(){
+    stopRain();
+    stopPulperia();
+    return v161StartBase();
+  };
+
+  document.addEventListener('cimarron-sfx-volume-change',syncVolumes);
+  document.addEventListener('cimarron-sfx-change',()=>{
+    if(!enabled()){
+      stopRain();
+      stopPulperia();
+    }else{
+      syncForNode(introNode);
+    }
+  });
+
+  /* Si el navegador bloqueó el primer play(), el próximo clic dentro de la intro
+     vuelve a intentar el ambiente correspondiente. */
+  document.addEventListener('pointerdown',()=>{
+    if(!document.getElementById('intro')?.classList.contains('hidden')){
+      setTimeout(()=>syncForNode(introNode),0);
+    }
+  },true);
+
+  const setV161=()=>{
+    document.title='Cimarrón v1.61 — ambientes persistentes';
+    const sub=document.querySelector('.gameSub');
+    if(sub)sub.textContent='v1.61 · PRIMERO A 7';
+  };
+  setV161();
+  setTimeout(setV161,0);
+  setTimeout(setV161,200);
+})();
+</script>
+
+<script id="v162-final-balance-fixes">
+(()=>{
+  const setV162=()=>{
+    document.title='Cimarrón v1.62 — balance de audio y primero a 7';
+    const sub=document.querySelector('.gameSub');
+    if(sub)sub.textContent='v1.62 · PRIMERO A 7';
+  };
+  setV162();
+  setTimeout(setV162,0);
+  setTimeout(setV162,250);
+})();
+</script>
+
+<script id="v163-version">
+(()=>{
+  const setV163=()=>{
+    document.title='Cimarrón v1.63 — mezcla audio 100/100';
+    const sub=document.querySelector('.gameSub');
+    if(sub)sub.textContent='v1.63 · PRIMERO A 7';
+  };
+  setV163();
+  setTimeout(setV163,0);
+  setTimeout(setV163,250);
+})();
+</script>
+
+<script id="v164-version">
+(()=>{
+  const setV164=()=>{
+    document.title='Cimarrón v1.64 — pulpería más fuerte';
+    const sub=document.querySelector('.gameSub');
+    if(sub)sub.textContent='v1.64 · PRIMERO A 7';
+  };
+  setV164();
+  setTimeout(setV164,0);
+  setTimeout(setV164,250);
+})();
+</script>
+
+<style id="v165-envido-radio-title-volume-style">
+#call.v155EnvidoResult{
+  cursor:pointer!important;
+}
+#call.v155EnvidoResult::after{
+  content:'CLIC PARA CERRAR';
+  display:block;
+  margin-top:8px;
+  font-family:'Pixelify Sans Cimarron','Lucida Console','Courier New',monospace;
+  font-size:11px;
+  font-weight:600;
+  color:#6b4a30;
+  opacity:.72;
+}
+
+#v165VolumeGrid{
+  display:grid;
+  gap:16px;
+  margin:16px 0 18px;
+}
+.v165VolumeRow{
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr) 48px;
+  gap:10px;
+  align-items:center;
+  padding:12px;
+  border:2px solid #5d4028;
+  background:#efd8a3;
+}
+.v165VolumeRow label{
+  font-family:'Pixelify Sans Cimarron','Lucida Console','Courier New',monospace;
+  font-weight:600;
+}
+.v165VolumeRow input[type="range"]{
+  width:100%;
+  accent-color:#c09a52;
+}
+.v165VolumeValue{
+  text-align:right;
+  font-family:'Pixelify Sans Cimarron','Lucida Console','Courier New',monospace;
+  font-weight:600;
+}
+#mmVolumeOptions{
+  background:#d9c08c!important;
+}
+</style>
+
+<script id="v165-envido-radio-title-volume-script">
+(()=>{
+  let v165CloseRadioTimer=null;
+
+  function v165UpdateRadioState(){
+    const s=document.getElementById('v136RadioState');
+    if(!s)return;
+    const panel=document.getElementById('v133AudioPanel');
+    const mode=document.getElementById('v133AudioMode');
+    const mute=document.getElementById('v133AudioMute');
+    const modeTxt=(mode?.textContent||'').replace('VERSIÓN:','').trim();
+    const muteTxt=(mute?.textContent||'').replace('MÚSICA:','').trim();
+    const open=panel&&!panel.classList.contains('hidden');
+    s.textContent=`${muteTxt||'ON'} · ${modeTxt||'NORMAL'}${open?' · AJUSTES':''}`;
+  }
+
+  function v165CloseRadioIfOutside(){
+    clearTimeout(v165CloseRadioTimer);
+    v165CloseRadioTimer=setTimeout(()=>{
+      const dock=document.getElementById('v136RadioDock');
+      const panel=document.getElementById('v133AudioPanel');
+      if(!panel||panel.classList.contains('hidden'))return;
+
+      const dockHover=!!dock?.matches?.(':hover');
+      const panelHover=!!panel?.matches?.(':hover');
+      if(!dockHover&&!panelHover){
+        panel.classList.add('hidden');
+        v165UpdateRadioState();
+      }
+    },90);
+  }
+
+  function v165BindRadioAutoclose(){
+    const dock=document.getElementById('v136RadioDock');
+    const panel=document.getElementById('v133AudioPanel');
+
+    if(dock&&dock.dataset.v165AutoClose!=='1'){
+      dock.dataset.v165AutoClose='1';
+      dock.addEventListener('mouseleave',v165CloseRadioIfOutside);
+      dock.addEventListener('mouseenter',()=>clearTimeout(v165CloseRadioTimer));
+    }
+
+    if(panel&&panel.dataset.v165AutoClose!=='1'){
+      panel.dataset.v165AutoClose='1';
+      panel.addEventListener('mouseleave',v165CloseRadioIfOutside);
+      panel.addEventListener('mouseenter',()=>clearTimeout(v165CloseRadioTimer));
+    }
+  }
+
+  function v165CurrentMusicPct(){
+    const slider=document.getElementById('v133Volume');
+    const n=Number(slider?.value);
+    return Number.isFinite(n)?Math.max(0,Math.min(100,n)):55;
+  }
+
+  function v165CurrentSfxPct(){
+    return Math.round(Math.max(0,Math.min(1,window.CIMARRON_SFX_VOLUME??1))*100);
+  }
+
+  function v165SetMusicPct(value){
+    const pct=Math.max(0,Math.min(100,Number(value)||0));
+    if(window.CIMARRON_AUDIO?.volume)window.CIMARRON_AUDIO.volume(pct/100);
+    const hidden=document.getElementById('v133Volume');
+    if(hidden)hidden.value=String(pct);
+  }
+
+  function v165SetSfxPct(value){
+    const pct=Math.max(0,Math.min(100,Number(value)||0));
+    if(typeof window.CIMARRON_SET_SFX_VOLUME==='function'){
+      window.CIMARRON_SET_SFX_VOLUME(pct/100);
+    }
+    const hidden=document.getElementById('v160SfxVolume');
+    if(hidden)hidden.value=String(pct);
+  }
+
+  function v165OpenVolumeOptions(){
+    const overlay=document.getElementById('overlay');
+    const modal=document.getElementById('modal');
+    if(!overlay||!modal)return;
+
+    const music=v165CurrentMusicPct();
+    const sfx=v165CurrentSfxPct();
+
+    modal.innerHTML=`
+      <h2>OPCIONES DE VOLUMEN</h2>
+      <div class="modalText">Ajustá por separado la música y los sonidos del juego.</div>
+      <div id="v165VolumeGrid">
+        <div class="v165VolumeRow">
+          <label for="v165MusicVolume">MÚSICA</label>
+          <input id="v165MusicVolume" type="range" min="0" max="100" step="1" value="${music}">
+          <span class="v165VolumeValue" id="v165MusicValue">${music}%</span>
+        </div>
+        <div class="v165VolumeRow">
+          <label for="v165SfxVolume">SONIDOS</label>
+          <input id="v165SfxVolume" type="range" min="0" max="100" step="1" value="${sfx}">
+          <span class="v165VolumeValue" id="v165SfxValue">${sfx}%</span>
+        </div>
+      </div>
+      <div class="choices"><button class="btn red" id="v165VolumeClose">CERRAR</button></div>
+    `;
+    overlay.classList.remove('hidden');
+
+    const musicSlider=document.getElementById('v165MusicVolume');
+    const sfxSlider=document.getElementById('v165SfxVolume');
+
+    musicSlider.oninput=e=>{
+      const pct=Math.round(Number(e.target.value)||0);
+      v165SetMusicPct(pct);
+      document.getElementById('v165MusicValue').textContent=pct+'%';
+    };
+
+    sfxSlider.oninput=e=>{
+      const pct=Math.round(Number(e.target.value)||0);
+      v165SetSfxPct(pct);
+      document.getElementById('v165SfxValue').textContent=pct+'%';
+    };
+
+    document.getElementById('v165VolumeClose').onclick=()=>{
+      overlay.classList.add('hidden');
+      if(introNode==='title')setTimeout(v165EnhanceTitle,0);
+    };
+  }
+
+  function v165EnhanceTitle(){
+    if(introNode!=='title')return;
+    const choices=document.querySelector('#introBox .mainMenuChoices');
+    if(!choices)return;
+
+    let b=document.getElementById('mmVolumeOptions');
+    if(!b){
+      b=document.createElement('button');
+      b.className='btn';
+      b.id='mmVolumeOptions';
+      b.textContent='OPCIONES DE VOLUMEN';
+      b.onclick=v165OpenVolumeOptions;
+
+      const musicMode=document.getElementById('mmMusicMode');
+      const exit=document.getElementById('mmExit');
+      if(musicMode?.parentNode===choices)musicMode.after(b);
+      else if(exit?.parentNode===choices)choices.insertBefore(b,exit);
+      else choices.appendChild(b);
+    }
+  }
+
+  const v165IntroBase=intro;
+  intro=function(){
+    const r=v165IntroBase();
+    setTimeout(()=>{
+      v165EnhanceTitle();
+      v165BindRadioAutoclose();
+    },0);
+    return r;
+  };
+
+  const v165RenderBase=render;
+  render=function(){
+    const r=v165RenderBase();
+    setTimeout(v165BindRadioAutoclose,0);
+    return r;
+  };
+
+  const setV165=()=>{
+    document.title='Cimarrón v1.65 — UX Envido, radio y volumen';
+    const sub=document.querySelector('.gameSub');
+    if(sub)sub.textContent='v1.65 · PRIMERO A 7';
+    v165EnhanceTitle();
+    v165BindRadioAutoclose();
+  };
+
+  setV165();
+  setTimeout(setV165,0);
+  setTimeout(setV165,250);
+})();
+</script>
+
+<script id="v166-juan-visible-hand-only">
+(()=>{
+  const setV166=()=>{
+    document.title='Cimarrón v1.66 — Juan explica sólo la mano visible';
+    const sub=document.querySelector('.gameSub');
+    if(sub)sub.textContent='v1.66 · PRIMERO A 7';
+  };
+  setV166();
+  setTimeout(setV166,0);
+  setTimeout(setV166,250);
+})();
+</script>
+
+<script id="v167-version">
+(()=>{
+  const setV167=()=>{
+    document.title='Cimarrón v1.67 — sonidos de mesa y diálogos más altos';
+    const sub=document.querySelector('.gameSub');
+    if(sub)sub.textContent='v1.67 · PRIMERO A 7';
+  };
+  setV167();
+  setTimeout(setV167,0);
+  setTimeout(setV167,250);
 })();
 </script>
