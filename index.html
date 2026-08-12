@@ -1,8 +1,5 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>Cimarrón v0.66 — derrotas, Muerte, Envido y Manga</title>
 <style>
 :root{--bg:#15110d;--wood:#4a2c18;--paper:#d8bf89;--paper2:#ecd9a8;--ink:#21170f;--red:#7d2a23;--cream:#f0ddb1;--gold:#c09a52;--green:#566b42}
@@ -15531,6 +15528,7 @@ img.v129FigureAsset{
       duel:[
         ['03 - duelo8bit.ogg','duelo8bit.ogg'],
         ['04 - duelo8bit2.ogg','duelo8bit2.ogg'],
+        ['05 - duelo8bit.ogg','duelo8bit.ogg'],
         ['10 - duelo8bit.ogg','duelo8bit.ogg']
       ],
       boss:[['06 - boss8bit.ogg','boss8bit.ogg'],['07 - boss8bit2.ogg','boss8bit2.ogg']],
@@ -15579,10 +15577,7 @@ img.v129FigureAsset{
 
   function v133Tracks(context=v133Context){return V133_MUSIC?.[v133MusicMode]?.[context]||[]}
   function v133CurrentCandidates(){const t=v133Tracks();return t.length?t[((v133TrackIndex%t.length)+t.length)%t.length]:[]}
-  function v133MusicPath(filename){
-    const dir=v133MusicMode==='normal'?'Normal':'8bit';
-    return `assets/music/${dir}/${filename}`;
-  }
+  function v133MusicPath(filename){return `assets/music/${v133MusicMode}/${filename}`}
   function v133PrettyContext(c){return ({theme:'MENÚ',intro:'INTRO',duel:'DUELO',shop:'TRASTIENDA',event:'EVENTO',boss:'JUAN I',finalboss:'JUAN II'})[c]||'—'}
 
   function v133EnsureAudio(){
@@ -15739,7 +15734,7 @@ img.v129FigureAsset{
     try{
       fx=new Audio(`assets/audio/${file}`);
       fx.preload='auto';
-      fx.volume=.38;
+      fx.volume=.38*(window.CIMARRON_SFX_VOLUME??1);
       fx.addEventListener('ended',finish,{once:true});
       fx.addEventListener('error',finish,{once:true});
       const p=fx.play();
@@ -18081,12 +18076,21 @@ img.v129FigureAsset{
   };
 
   const V147_SFX_PREF='cimarron_sfx_v149';
+  const V147_SFX_VOL_PREF='cimarron_sfx_volume_v160';
   let v147SfxEnabled=true;
+  let v147SfxVolume=1;
   try{
     const saved=localStorage.getItem(V147_SFX_PREF);
     if(saved==='off')v147SfxEnabled=false;
+    const sv=Number(localStorage.getItem(V147_SFX_VOL_PREF));
+    if(Number.isFinite(sv)&&sv>=0&&sv<=1)v147SfxVolume=sv;
   }catch(e){}
   window.CIMARRON_SFX_ENABLED=v147SfxEnabled;
+  window.CIMARRON_SFX_VOLUME=v147SfxVolume;
+
+  function v147SfxLevel(base){
+    return Math.max(0,Math.min(1,(Number(base)||0)*v147SfxVolume));
+  }
 
   const v147ActiveSfx=new Set();
   const v147Pools={};
@@ -18102,12 +18106,47 @@ img.v129FigureAsset{
 
   function v147Path(key){return V147_AUDIO_ROOT+(V147_SFX[key]||key)}
 
+  /* Precarga real de los WAV usados por el juego.
+     Mantiene un Audio base por sonido; los one-shot clonan ese nodo ya calentado. */
+  const v147PreloadedAudio={};
+  const V147_PRELOAD_KEYS=[
+    'pulperia','poroto','lluvia','trueno','carta','deal','mezcla',
+    'radio','radio2','radio3','radio4','motor'
+  ];
+
+  function v147PrimeAudio(){
+    for(const key of V147_PRELOAD_KEYS){
+      if(v147PreloadedAudio[key])continue;
+      try{
+        const a=new Audio();
+        a.preload='auto';
+        a.src=v147Path(key);
+        a.load();
+        v147PreloadedAudio[key]=a;
+      }catch(e){}
+    }
+  }
+
+  function v147AudioInstance(key){
+    try{
+      const base=v147PreloadedAudio[key];
+      const a=base?base.cloneNode(true):new Audio(v147Path(key));
+      a.preload='auto';
+      return a;
+    }catch(e){
+      try{return new Audio(v147Path(key))}catch(_){return null}
+    }
+  }
+
+  v147PrimeAudio();
+
   function v147OneShot(key,volume=.5,rate=1){
     if(!v147SfxEnabled)return null;
     try{
-      const a=new Audio(v147Path(key));
-      a.preload='auto';
-      a.volume=Math.max(0,Math.min(1,volume));
+      const a=v147AudioInstance(key);
+      if(!a)return null;
+      a._cimarronBaseVolume=Math.max(0,Math.min(1,volume));
+      a.volume=v147SfxLevel(a._cimarronBaseVolume);
       a.playbackRate=rate;
       v147ActiveSfx.add(a);
       const cleanup=()=>v147ActiveSfx.delete(a);
@@ -18142,10 +18181,12 @@ img.v129FigureAsset{
   function v147Fade(audio,to,duration,stopAfter=false){
     if(!audio)return;
     const from=Number(audio.volume)||0;
+    const target=v147SfxLevel(to);
+    audio._cimarronBaseVolume=Math.max(0,Math.min(1,Number(to)||0));
     const start=performance.now();
     const step=now=>{
       const t=Math.min(1,(now-start)/Math.max(1,duration));
-      audio.volume=from+(to-from)*t;
+      audio.volume=from+(target-from)*t;
       if(t<1)requestAnimationFrame(step);
       else if(stopAfter){try{audio.pause();audio.currentTime=0}catch(e){}}
     };
@@ -18156,10 +18197,10 @@ img.v129FigureAsset{
     setTimeout(()=>{
       const a=v147OneShot('lluvia',0);
       if(!a)return;
-      v147Fade(a,.22,650);
+      v147Fade(a,.40,650);
       setTimeout(()=>v147Fade(a,0,900,true),Math.max(900,duration-900));
       if(withThunder){
-        setTimeout(()=>v147OneShot('trueno',.30),Math.min(duration-700,1800+Math.random()*900));
+        setTimeout(()=>v147OneShot('trueno',.38),Math.min(duration-700,1800+Math.random()*900));
       }
     },delay);
   }
@@ -18167,12 +18208,13 @@ img.v129FigureAsset{
   function v147StartPulperia(){
     if(!v147SfxEnabled||v147PulperiaAmbient)return;
     try{
-      const a=new Audio(v147Path('pulperia'));
+      const a=v147AudioInstance('pulperia');
+      if(!a)return;
       a.loop=true;a.preload='auto';a.volume=0;
       v147PulperiaAmbient=a;
       v147ActiveSfx.add(a);
       const p=a.play();if(p&&p.catch)p.catch(()=>{});
-      v147Fade(a,.34,1000);
+      v147Fade(a,.58,1000);
     }catch(e){}
   }
   function v147StopPulperia(){
@@ -18185,7 +18227,8 @@ img.v129FigureAsset{
   function v147StartMotor(){
     if(!v147SfxEnabled||v147MotorAmbient)return;
     try{
-      const a=new Audio(v147Path('motor'));
+      const a=v147AudioInstance('motor');
+      if(!a)return;
       a.loop=true;a.preload='auto';a.volume=0;
       v147MotorAmbient=a;
       v147ActiveSfx.add(a);
@@ -18216,6 +18259,24 @@ img.v129FigureAsset{
       if(typeof introNode!=='undefined'&&(introNode==='rain'||introNode==='bus'))v147StartMotor();
     }
     document.dispatchEvent(new CustomEvent('cimarron-sfx-change',{detail:{enabled:v147SfxEnabled}}));
+  };
+
+  window.CIMARRON_SET_SFX_VOLUME=function(value){
+    v147SfxVolume=Math.max(0,Math.min(1,Number(value)||0));
+    window.CIMARRON_SFX_VOLUME=v147SfxVolume;
+    try{localStorage.setItem(V147_SFX_VOL_PREF,String(v147SfxVolume))}catch(e){}
+
+    for(const a of [...v147ActiveSfx]){
+      try{
+        if(Number.isFinite(a._cimarronBaseVolume)){
+          a.volume=v147SfxLevel(a._cimarronBaseVolume);
+        }
+      }catch(e){}
+    }
+
+    document.dispatchEvent(new CustomEvent('cimarron-sfx-volume-change',{
+      detail:{volume:v147SfxVolume}
+    }));
   };
 
   function v147RadioSfx(){
@@ -18584,10 +18645,10 @@ img.v129FigureAsset{
     if(!el)return null;
 
     if(el.id==='juanText'){
-      return {base:155,spread:24,wave:'square',volume:.030,duration:.050};
+      return {base:155,spread:24,wave:'square',volume:.055,duration:.050};
     }
     if(el.id==='playerSpeechText'){
-      return {base:225,spread:34,wave:'triangle',volume:.026,duration:.043};
+      return {base:225,spread:34,wave:'triangle',volume:.048,duration:.043};
     }
     if(el.id==='oppSpeechText'){
       const rid=(typeof o==='function'&&o()?.id)||'rival';
@@ -18598,7 +18659,7 @@ img.v129FigureAsset{
         base:bases[h%bases.length],
         spread:24+(h%22),
         wave:waves[(h>>>4)%waves.length],
-        volume:.023,
+        volume:.042,
         duration:.040+(h%12)/1000
       };
     }
@@ -18629,7 +18690,7 @@ img.v129FigureAsset{
       );
 
       gain.gain.setValueAtTime(0.0001,now);
-      gain.gain.exponentialRampToValueAtTime(profile.volume,now+.006);
+      gain.gain.exponentialRampToValueAtTime(Math.max(.0001,profile.volume*(window.CIMARRON_SFX_VOLUME??1)),now+.006);
       gain.gain.exponentialRampToValueAtTime(0.0001,now+profile.duration);
 
       osc.connect(gain);
@@ -18910,7 +18971,7 @@ img.v129FigureAsset{
     try{
       const a=new Audio('assets/audio/motor.wav');
       a.preload='auto';
-      a.volume=.24;
+      a.volume=.24*(window.CIMARRON_SFX_VOLUME??1);
       v151Motor=a;
       const p=a.play();
       if(p&&typeof p.catch==='function')p.catch(()=>{});
@@ -19319,151 +19380,105 @@ button[id^="jumpJuan"]{
 })();
 </script>
 
-<style id="v159-release-absolute-no-dev">
-/* ================= v1.59 — RELEASE ONLINE LIMPIA ================= */
-/* Blindaje final: absolutamente ningún control de desarrollo queda visible. */
-.devJump,
-.menuHint,
-#v140HeaderRight,
-button[id*="Cheat" i],
-button[id^="jumpJuan" i],
-button[id="v79CheatInGame"],
-button[id="v80CheatEvento"],
-button[id="v124CheatCardsSigns"],
-button[id="v134CheatCardsSigns"],
-button[id="mmCheatRival"],
-button[id="mmCheatChanges"],
-button[id="mmCheatRelics"],
-.v99CheatRivalBtn,
-.v79CheatBtn,
-.cheatBtn{
-  display:none!important;
+<style id="v160-sfx-volume-ui">
+#v160SfxVolumeWrap{
+  width:100%;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:8px;
+  color:#efd8a3;
+  font-family:'Pixelify Sans Cimarron','Lucida Console','Courier New',monospace;
+  font-size:13px;
+  font-weight:600;
+}
+#v160SfxVolume{
+  width:100%;
+  min-width:0;
+  accent-color:#c09a52;
+}
+#v160SfxVolumeValue{
+  min-width:38px;
+  text-align:right;
 }
 </style>
 
-<script id="v159-release-online-hardening">
+<script id="v160-audio-preload-volume-release">
 (()=>{
-  const V159_VERSION='v1.59';
+  function v160EnsureSfxVolume(){
+    const panel=document.getElementById('v133AudioPanel');
+    if(!panel)return;
 
-  function v159SetVersion(){
-    document.title='Cimarrón '+V159_VERSION+' — versión online';
-    const sub=document.querySelector('.gameSub');
-    if(sub)sub.textContent=V159_VERSION+' · PRIMERO A 7';
-  }
+    let wrap=document.getElementById('v160SfxVolumeWrap');
+    if(!wrap){
+      wrap=document.createElement('div');
+      wrap.id='v160SfxVolumeWrap';
+      wrap.innerHTML=
+        '<span>SONIDOS</span>'+
+        '<input id="v160SfxVolume" type="range" min="0" max="100" step="1">'+
+        '<span id="v160SfxVolumeValue">100%</span>';
 
-  function v159IsDev(el){
-    if(!el||el.nodeType!==1)return false;
-    const txt=String(el.textContent||'').trim();
-    const id=String(el.id||'');
-    const cls=String(el.className||'');
-    return (
-      /\bCHEAT\b/i.test(txt) ||
-      /^PRUEBA\b/i.test(txt) ||
-      /Cheat/i.test(id) ||
-      /^jumpJuan/i.test(id) ||
-      /\bcheat/i.test(cls)
-    );
-  }
+      const toggle=document.getElementById('v149SfxToggle');
+      if(toggle)toggle.insertAdjacentElement('afterend',wrap);
+      else panel.appendChild(wrap);
 
-  function v159PurgeDev(root=document){
-    const nodes=[];
-    if(root!==document&&v159IsDev(root))nodes.push(root);
-    if(root.querySelectorAll){
-      root.querySelectorAll('button,.btn,.devJump,.menuHint,#v140HeaderRight').forEach(el=>{
-        if(el.matches?.('.devJump,.menuHint,#v140HeaderRight')||v159IsDev(el))nodes.push(el);
-      });
+      document.getElementById('v160SfxVolume').oninput=e=>{
+        const value=Math.max(0,Math.min(100,Number(e.target.value)||0));
+        if(typeof window.CIMARRON_SET_SFX_VOLUME==='function'){
+          window.CIMARRON_SET_SFX_VOLUME(value/100);
+        }
+        v160Sync();
+      };
     }
-    [...new Set(nodes)].forEach(el=>{try{el.remove()}catch(e){}});
+    v160Sync();
   }
 
-  /* Si un PNG falla por un 404 temporal de Pages/CDN, lo reintentamos una sola
-     vez con un query de versión para evitar una respuesta cacheada vieja. */
-  function v159InstallImageRetry(root=document){
-    const imgs=[];
-    if(root?.tagName==='IMG')imgs.push(root);
-    root?.querySelectorAll?.('img').forEach(i=>imgs.push(i));
-
-    imgs.forEach(img=>{
-      if(img.dataset.v159RetryBound==='1')return;
-      img.dataset.v159RetryBound='1';
-      img.addEventListener('error',()=>{
-        if(img.dataset.v159Retried==='1')return;
-        const src=String(img.getAttribute('src')||'');
-        if(!src.startsWith('assets/')||src.includes('?v159='))return;
-        img.dataset.v159Retried='1';
-        img.src=src+(src.includes('?')?'&':'?')+'v159=1';
-      });
-    });
+  function v160Sync(){
+    const value=Math.round((window.CIMARRON_SFX_VOLUME??1)*100);
+    const slider=document.getElementById('v160SfxVolume');
+    const label=document.getElementById('v160SfxVolumeValue');
+    if(slider)slider.value=String(value);
+    if(label)label.textContent=value+'%';
   }
 
-  /* Calienta solamente los recursos de interfaz/intro más visibles. */
-  const V159_CRITICAL=[
-    'assets/ui/menu.png',
-    'assets/ui/baraja.png',
-    'assets/ui/orden.png',
-    'assets/ui/reglas.png',
-    'assets/ui/radio.png',
-    'assets/ui/mano.png',
-    'assets/ui/ficha.png',
-    'assets/ui/sena.png',
-    'assets/ui/manga.png',
-    'assets/intro/principal.png'
-  ];
-  V159_CRITICAL.forEach(src=>{
-    try{const im=new Image();im.src=src+'?v159=1'}catch(e){}
-  });
+  document.addEventListener('cimarron-sfx-volume-change',v160Sync);
 
-  function v159Refresh(){
-    v159PurgeDev(document);
-    v159InstallImageRetry(document);
-    v159SetVersion();
-  }
+  /* Peón sigue bloqueado para esta build de prueba. */
+  const baseGenerateRoute=generateRoute;
+  generateRoute=function(){
+    const peon=ROSTER.find(r=>r.id==='peon');
+    const oldPower=peon?.power;
+    if(peon)peon.power=999;
+    try{
+      return baseGenerateRoute().filter(r=>r?.id!=='peon');
+    }finally{
+      if(peon)peon.power=oldPower;
+    }
+  };
 
   const baseRender=render;
   render=function(){
     const r=baseRender();
-    v159Refresh();
-    setTimeout(v159Refresh,0);
+    setTimeout(v160EnsureSfxVolume,0);
     return r;
   };
 
   const baseIntro=intro;
   intro=function(){
     const r=baseIntro();
-    v159Refresh();
-    setTimeout(v159Refresh,0);
+    setTimeout(v160EnsureSfxVolume,0);
     return r;
   };
 
-  const baseStart=startGame;
-  startGame=function(){
-    const r=baseStart();
-    v159Refresh();
-    setTimeout(v159Refresh,0);
-    return r;
+  const setVersion=()=>{
+    document.title='Cimarrón v1.60 — audio online precargado';
+    const sub=document.querySelector('.gameSub');
+    if(sub)sub.textContent='v1.60 · PRIMERO A 7';
+    v160EnsureSfxVolume();
   };
 
-  const baseLoad=loadGameState;
-  loadGameState=function(){
-    const r=baseLoad();
-    v159Refresh();
-    setTimeout(v159Refresh,0);
-    return r;
-  };
-
-  const observer=new MutationObserver(records=>{
-    for(const rec of records){
-      for(const node of rec.addedNodes){
-        if(node.nodeType!==1)continue;
-        v159PurgeDev(node);
-        v159InstallImageRetry(node);
-      }
-    }
-  });
-  if(document.body)observer.observe(document.body,{childList:true,subtree:true});
-
-  v159Refresh();
-  setTimeout(v159Refresh,0);
-  setTimeout(v159Refresh,250);
+  setVersion();
+  setTimeout(setVersion,0);
+  setTimeout(setVersion,200);
 })();
 </script>
